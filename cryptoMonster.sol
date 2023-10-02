@@ -29,7 +29,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
 
     struct Request {
         string login;
-        address wallet; 
+        address wallet;
     }
 
     phase currentPhase = phase.Seed;
@@ -53,27 +53,19 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     mapping(address account => mapping(address spender => mapping(phase => uint256))) allowances;
 
     modifier registered(address _wallet) {
-        if (_wallet == address(0)) {
-            revert InvalidAddress(_wallet);
-        }
-        if (addressToUser[_wallet].wallet == address(0)) {
-            revert InvalidAddress(_wallet);
-        }
+        require(_wallet != address(0), "Invalid address");
+        require(addressToUser[_wallet].wallet != address(0), "Invalid address");
         _;
     }
     
     modifier onlyPhase(phase _phase) {
         _updatePhase();
-        if (currentPhase != _phase) {
-            revert PermissionDenied();
-        }
+        require(currentPhase == _phase, "Permission denied");
         _;
     }
 
     modifier onlyRole(roles _role) {
-        if (addressToUser[msg.sender].role != _role) {
-            revert PermissionDenied();
-        }
+        require(addressToUser[msg.sender].role == _role, "Permission denied");
         _;
     }
 
@@ -129,11 +121,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     }
 
     function transferToken(address to, uint256 value, phase tokenGroup) public registered(msg.sender) registered(to) {
-        value *= 10 ** decimals();
-        uint256 tokens = tokensOf(msg.sender, tokenGroup);
-        if(tokens < value) {
-            revert ERC20InsufficientBalance(msg.sender, tokens, value);
-        }
+        require(tokensOf(msg.sender, tokenGroup) >= value, "Insuffucient balance");
         transfer(to, value);
         addressToTokens[msg.sender][tokenGroup] -= value;
         addressToTokens[to][tokenGroup] += value;
@@ -142,10 +130,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     }
 
     function transferTokenFrom(address from, address to, uint256 value, phase tokenGroup) public registered(msg.sender) registered(from) registered(to) {
-        value *= 10 ** decimals();
-        if(balanceOf(from) < value) {
-            revert ERC20InsufficientBalance(from, balanceOf(from), value);
-        }
+        require(balanceOf(from) >= value, "Insufficient balance");
         transferFrom(from, to, value);
         addressToTokens[from][tokenGroup] -= value;
         addressToTokens[to][tokenGroup] += value;
@@ -169,31 +154,30 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
 
     function processRequest(uint256 requestId, bool confirm) public onlyRole(roles.privateProvider) {
         _updatePhase();
-        if (currentPhase != phase.Public) {
-            if (confirm) {
-                addressToUser[whitelistRequests[requestId].wallet].isInWhitelist = true;
-            }
-
-            delete whitelistRequests[requestId];
-            for (uint256 i = requestId; i < whitelistRequests.length - 1; i++) {
-                whitelistRequests[i] = whitelistRequests[i + 1];
-            }
-            whitelistRequests.pop();
+        if (confirm) {
+            addressToUser[whitelistRequests[requestId].wallet].isInWhitelist = true;
         }
+
+        delete whitelistRequests[requestId];
+        for (uint256 i = requestId; i < whitelistRequests.length - 1; i++) {
+            whitelistRequests[i] = whitelistRequests[i + 1];
+        }
+        whitelistRequests.pop();
     }
 
     function changeTokenCost(uint256 cost_Wei) public onlyRole(roles.publicProvider) onlyPhase(phase.Public) {
-        tokenCost = cost_Wei;
+        require(cost_Wei >= 10 ** decimals(), "Cost too small");
+        tokenCost = cost_Wei / (10 ** decimals());
     }
 
-    function signUp(string calldata login, uint256 password) public {
+    function signUp(string calldata login, string calldata password) public {
         require(addressToUser[msg.sender].wallet == address(0), "You are already registered");
         require(loginToPassword[login] == 0, "This login is already registered");
         addressToUser[msg.sender] = User(msg.sender, login, roles.User, 0, false, false);
-        loginToPassword[login] = password;
+        loginToPassword[login] = uint256(keccak256(abi.encodePacked(password)));
     }
 
-    function signIn(string calldata login, uint256 password) public view returns(
+    function signIn(string calldata login, string calldata password) public view returns(
         User memory _user,
         uint256 _seedTokens,
         uint256 _privateTokens,
@@ -201,9 +185,9 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     ) {
         User memory user = addressToUser[msg.sender];
         string memory _login = user.login;
-        
+
         require(keccak256(abi.encodePacked(_login)) == keccak256(abi.encodePacked(login)), "This isn't your login");
-        require(loginToPassword[_login] == password, "Password is incorrect");
+        require(loginToPassword[_login] == uint256(keccak256(abi.encodePacked(password))), "Password is incorrect");
 
         address wallet = _user.wallet;
         uint256 seedTokens = addressToTokens[wallet][phase.Seed];
@@ -215,35 +199,21 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
 
     function buyToken(uint256 amount) public payable registered(msg.sender) {
         _updatePhase();
-        uint256 value = amount * 10 ** decimals();
+        require(currentPhase != phase.Seed, "Sale not started");
+        address provider;
         if (currentPhase == phase.Public) {
-            uint256 allowedTokens = allowances[owner][publicProvider][phase.Public];
-            if (allowedTokens < value) {
-                revert ERC20InsufficientBalance(publicProvider, allowedTokens, value);
-            }
-            if (msg.value < amount * tokenCost) {
-                revert InsufficientFunds(amount * tokenCost, msg.value);
-            }
-            payable(owner).transfer(msg.value);
-            allowances[owner][publicProvider][phase.Public] -= value;
-            addressToTokens[msg.sender][phase.Public] += value;
-            addressToUser[msg.sender].balance += value;
-        } else if (currentPhase == phase.Private) {
-            require(addressToUser[msg.sender].isInWhitelist, "Free sale not started");
-            uint256 allowedTokens = allowances[owner][privateProvider][phase.Private];
-            if (allowedTokens < value) {
-                revert ERC20InsufficientBalance(privateProvider, allowedTokens, value);
-            }
-            if (msg.value < amount * tokenCost) {
-                revert InsufficientFunds(amount * tokenCost, msg.value);
-            }
-            payable(owner).transfer(msg.value);
-            allowances[owner][privateProvider][phase.Private] -= value;
-            addressToTokens[msg.sender][phase.Private] += value;
-            addressToUser[msg.sender].balance += value;
+            provider = publicProvider;
         } else {
-            revert ("Sale not started");
+            require(addressToUser[msg.sender].isInWhitelist, "Free sale not started");
+            provider = privateProvider;
         }
+        uint256 allowedTokens = allowances[owner][provider][currentPhase];
+        require(allowedTokens >= amount, "Insufficient balance");
+        require(msg.value >= amount * tokenCost, "Insufficient funds");
+        payable(owner).transfer(msg.value);
+        allowances[owner][provider][currentPhase] -= amount;
+        addressToTokens[msg.sender][currentPhase] += amount;
+        addressToUser[msg.sender].balance += amount;
     }
 
     function _updatePhase() private {
@@ -254,13 +224,15 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
             if (currentPhase == phase.Seed) {
                 if (minutesFromStart >= 5) {
                     currentPhase = phase.Private;
-                    tokenCost = 0.00075 ether;
+                    tokenCost = 0.00075 ether / (10 ** decimals());
                     transactionLimit = 100000;
                     _approveTokens(owner, privateProvider, 3000000, phase.Private);
                 }
             } else if (currentPhase == phase.Private) {
                 if (minutesFromStart >= 15) {
                     currentPhase = phase.Public;
+                    tokenCost = 0.001 ether / (10 ** decimals());
+                    transactionLimit = 5000;
                     _approveTokens(owner, privateProvider, 0, phase.Private);
                     _approveTokens(owner, publicProvider, 6000000, phase.Public);
                 }
@@ -269,10 +241,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     }
 
     function _approveTokens(address from, address to, uint256 value, phase tokenGroup) private {
-        value *= 10 ** decimals();
-        if (addressToTokens[from][tokenGroup] < value) {
-            revert ERC20InsufficientBalance(from, addressToTokens[from][tokenGroup], value);
-        }
+        require(addressToTokens[from][tokenGroup] >= value, "Insufficient balance");
         _approve(from, to, value);
         uint256 allowedTokens = allowances[from][to][tokenGroup];
         addressToTokens[from][tokenGroup] += allowedTokens;

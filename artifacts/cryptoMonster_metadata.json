@@ -463,9 +463,9 @@
 						"type": "string"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "string",
 						"name": "password",
-						"type": "uint256"
+						"type": "string"
 					}
 				],
 				"name": "signIn",
@@ -534,9 +534,9 @@
 						"type": "string"
 					},
 					{
-						"internalType": "uint256",
+						"internalType": "string",
 						"name": "password",
-						"type": "uint256"
+						"type": "string"
 					}
 				],
 				"name": "signUp",
@@ -808,11 +808,11 @@
 			]
 		},
 		"cryptoMonster.sol": {
-			"keccak256": "0x762f2f18b87d872a237a71166f5bd7f2d7cc6d63a55672f44410f3c1fa56bc0a",
+			"keccak256": "0x3d2ad6c3a8fb759686ed2400458f9d96fad61695c361ddeb2ebf3517b676664b",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://43673a1e6066c702cd44c47f472231a61d40eb84bb03047f2668e2fa67f86140",
-				"dweb:/ipfs/QmNTi31tMUDWH8bxb8iAqZrYRmeZVpd945YCgsiyQKu772"
+				"bzz-raw://490212de8b2ce4b1e7bca3a28ea4e6e67d6b6c95baf1209978b94144ca5b6c2c",
+				"dweb:/ipfs/Qmd2yjPUzAQCxrRoLAnVAT4q9pp3vpxbyHArAnokwL4PEV"
 			]
 		}
 	},
