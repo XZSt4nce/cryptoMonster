@@ -47,9 +47,9 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     address privateProvider;
     address publicProvider;
 
-    mapping (address => User) addressToUser;
-    mapping (string => uint256) loginToPassword;
-    mapping (address => mapping(phase => uint256)) addressToTokens; // Количество токенов из разных групп у пользователей
+    mapping(address => User) addressToUser;
+    mapping(string => uint256) loginToPassword;
+    mapping(address => mapping(phase => uint256)) addressToTokens; // Количество токенов из разных групп у пользователей
     mapping(address account => mapping(address spender => mapping(phase => uint256))) allowances;
 
     modifier registered(address _wallet) {
@@ -191,6 +191,26 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         require(loginToPassword[login] == 0, "This login is already registered");
         addressToUser[msg.sender] = User(msg.sender, login, roles.User, 0, false, false);
         loginToPassword[login] = password;
+    }
+
+    function signIn(string calldata login, uint256 password) public view returns(
+        User memory _user,
+        uint256 _seedTokens,
+        uint256 _privateTokens,
+        uint256 _publicTokens
+    ) {
+        User memory user = addressToUser[msg.sender];
+        string memory _login = user.login;
+        
+        require(keccak256(abi.encodePacked(_login)) == keccak256(abi.encodePacked(login)), "This isn't your login");
+        require(loginToPassword[_login] == password, "Password is incorrect");
+
+        address wallet = _user.wallet;
+        uint256 seedTokens = addressToTokens[wallet][phase.Seed];
+        uint256 privateTokens = addressToTokens[wallet][phase.Private];
+        uint256 publicTokens = addressToTokens[wallet][phase.Public];
+
+        return (_user, seedTokens, privateTokens, publicTokens);
     }
 
     function buyToken(uint256 amount) public payable registered(msg.sender) {

@@ -468,6 +468,77 @@
 						"type": "uint256"
 					}
 				],
+				"name": "signIn",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "address",
+								"name": "wallet",
+								"type": "address"
+							},
+							{
+								"internalType": "string",
+								"name": "login",
+								"type": "string"
+							},
+							{
+								"internalType": "enum cryptoMonster.roles",
+								"name": "role",
+								"type": "uint8"
+							},
+							{
+								"internalType": "uint256",
+								"name": "balance",
+								"type": "uint256"
+							},
+							{
+								"internalType": "bool",
+								"name": "whitelistRequested",
+								"type": "bool"
+							},
+							{
+								"internalType": "bool",
+								"name": "isInWhitelist",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct cryptoMonster.User",
+						"name": "_user",
+						"type": "tuple"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_seedTokens",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_privateTokens",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_publicTokens",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "login",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "password",
+						"type": "uint256"
+					}
+				],
 				"name": "signUp",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -737,11 +808,11 @@
 			]
 		},
 		"cryptoMonster.sol": {
-			"keccak256": "0x1817f7bb73fd16e0dfbfbc24339e2a54548b85189613fbc4dcfaf4b3aa8cf47b",
+			"keccak256": "0x762f2f18b87d872a237a71166f5bd7f2d7cc6d63a55672f44410f3c1fa56bc0a",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://264e2e05645cc4905dae3dfa05ef58173820b4f70b8dd3094e5bd57daf260182",
-				"dweb:/ipfs/QmSBqAVDhD26tNZ76ZgEgYBqPkE6MgYf5omHpoGiCQbML1"
+				"bzz-raw://43673a1e6066c702cd44c47f472231a61d40eb84bb03047f2668e2fa67f86140",
+				"dweb:/ipfs/QmNTi31tMUDWH8bxb8iAqZrYRmeZVpd945YCgsiyQKu772"
 			]
 		}
 	},
