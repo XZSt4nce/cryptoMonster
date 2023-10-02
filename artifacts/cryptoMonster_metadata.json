@@ -63,19 +63,25 @@
 						"internalType": "address",
 						"name": "wallet",
 						"type": "address"
-					},
+					}
+				],
+				"name": "ERC20InvalidSender",
+				"type": "error"
+			},
+			{
+				"inputs": [
 					{
 						"internalType": "uint256",
-						"name": "balance",
+						"name": "required",
 						"type": "uint256"
 					},
 					{
 						"internalType": "uint256",
-						"name": "value",
+						"name": "provided",
 						"type": "uint256"
 					}
 				],
-				"name": "Overflow",
+				"name": "InsufficientFunds",
 				"type": "error"
 			},
 			{
@@ -192,6 +198,29 @@
 				"inputs": [
 					{
 						"internalType": "address",
+						"name": "spender",
+						"type": "address"
+					},
+					{
+						"internalType": "uint256",
+						"name": "value",
+						"type": "uint256"
+					},
+					{
+						"internalType": "enum cryptoMonster.phase",
+						"name": "tokenGroup",
+						"type": "uint8"
+					}
+				],
+				"name": "approveTokens",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
 						"name": "account",
 						"type": "address"
 					}
@@ -208,10 +237,16 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
 				"name": "buyToken",
 				"outputs": [],
-				"stateMutability": "nonpayable",
+				"stateMutability": "payable",
 				"type": "function"
 			},
 			{
@@ -289,7 +324,18 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "requestId",
+						"type": "uint256"
+					},
+					{
+						"internalType": "bool",
+						"name": "confirm",
+						"type": "bool"
+					}
+				],
 				"name": "processRequest",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -303,6 +349,30 @@
 						"internalType": "string",
 						"name": "",
 						"type": "string"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "account",
+						"type": "address"
+					},
+					{
+						"internalType": "enum cryptoMonster.phase",
+						"name": "tokenGroup",
+						"type": "uint8"
+					}
+				],
+				"name": "tokensOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -385,6 +455,11 @@
 						"internalType": "uint256",
 						"name": "value",
 						"type": "uint256"
+					},
+					{
+						"internalType": "enum cryptoMonster.phase",
+						"name": "tokenGroup",
+						"type": "uint8"
 					}
 				],
 				"name": "transferToken",
@@ -536,11 +611,11 @@
 			]
 		},
 		"cryptoMonster.sol": {
-			"keccak256": "0x60e2daecd4693b4565ccb1e2fac7c25fb2f1e94b7d5db2b7fdd9a10adbe208ca",
+			"keccak256": "0x8e704a87e87a638318594e5dd385f1f39c2e40aaa6f6fec31ca822337e9da256",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://44ad6b424df6e9bf591be0b27ea0d6718df60a84d08be0558aa5acddc8625ecf",
-				"dweb:/ipfs/QmdbAGg5KuwbP12rhXFmt6CetcCJWcSeykEMWQxFZZRjHg"
+				"bzz-raw://3b23721881f41d4cfef3bd7eabb7d3747c5a82f367f186db1f0c8fed0fe6358b",
+				"dweb:/ipfs/Qmev6ZGc9baZBDeJRairHpGLxeYXyV67pB8UuovtLg7bQ6"
 			]
 		}
 	},
