@@ -60,17 +60,6 @@
 			{
 				"inputs": [
 					{
-						"internalType": "address",
-						"name": "wallet",
-						"type": "address"
-					}
-				],
-				"name": "ERC20InvalidSender",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
 						"internalType": "uint256",
 						"name": "required",
 						"type": "uint256"
@@ -82,6 +71,17 @@
 					}
 				],
 				"name": "InsufficientFunds",
+				"type": "error"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "wallet",
+						"type": "address"
+					}
+				],
+				"name": "InvalidAddress",
 				"type": "error"
 			},
 			{
@@ -144,6 +144,32 @@
 				"name": "IncSysLifeTime1Min",
 				"outputs": [],
 				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "Time_start",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "Time_system",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
 				"type": "function"
 			},
 			{
@@ -250,6 +276,19 @@
 				"type": "function"
 			},
 			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "cost_Wei",
+						"type": "uint256"
+					}
+				],
+				"name": "changeTokenCost",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
 				"inputs": [],
 				"name": "decimals",
 				"outputs": [
@@ -337,6 +376,99 @@
 					}
 				],
 				"name": "processRequest",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "showPhase",
+				"outputs": [
+					{
+						"internalType": "enum cryptoMonster.phase",
+						"name": "",
+						"type": "uint8"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "showTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "startTime",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "systemTime",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "enum cryptoMonster.phase",
+						"name": "tokenGroup",
+						"type": "uint8"
+					}
+				],
+				"name": "showTokens",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "showWhitelistRequests",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "login",
+								"type": "string"
+							},
+							{
+								"internalType": "address",
+								"name": "wallet",
+								"type": "address"
+							}
+						],
+						"internalType": "struct cryptoMonster.Request[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "string",
+						"name": "login",
+						"type": "string"
+					},
+					{
+						"internalType": "uint256",
+						"name": "password",
+						"type": "uint256"
+					}
+				],
+				"name": "signUp",
 				"outputs": [],
 				"stateMutability": "nonpayable",
 				"type": "function"
@@ -483,6 +615,11 @@
 						"internalType": "uint256",
 						"name": "value",
 						"type": "uint256"
+					},
+					{
+						"internalType": "enum cryptoMonster.phase",
+						"name": "tokenGroup",
+						"type": "uint8"
 					}
 				],
 				"name": "transferTokenFrom",
@@ -491,18 +628,7 @@
 				"type": "function"
 			},
 			{
-				"inputs": [
-					{
-						"internalType": "string",
-						"name": "login",
-						"type": "string"
-					},
-					{
-						"internalType": "address",
-						"name": "wallet",
-						"type": "address"
-					}
-				],
+				"inputs": [],
 				"name": "whitelistRequest",
 				"outputs": [],
 				"stateMutability": "nonpayable",
@@ -611,11 +737,11 @@
 			]
 		},
 		"cryptoMonster.sol": {
-			"keccak256": "0x8e704a87e87a638318594e5dd385f1f39c2e40aaa6f6fec31ca822337e9da256",
+			"keccak256": "0x1817f7bb73fd16e0dfbfbc24339e2a54548b85189613fbc4dcfaf4b3aa8cf47b",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://3b23721881f41d4cfef3bd7eabb7d3747c5a82f367f186db1f0c8fed0fe6358b",
-				"dweb:/ipfs/Qmev6ZGc9baZBDeJRairHpGLxeYXyV67pB8UuovtLg7bQ6"
+				"bzz-raw://264e2e05645cc4905dae3dfa05ef58173820b4f70b8dd3094e5bd57daf260182",
+				"dweb:/ipfs/QmSBqAVDhD26tNZ76ZgEgYBqPkE6MgYf5omHpoGiCQbML1"
 			]
 		}
 	},
