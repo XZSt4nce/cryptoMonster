@@ -22,14 +22,16 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         address wallet;
         string login;
         roles role;
-        uint256 balance;
-        bool whitelistRequested;
+        uint256 balanceSeed;
+        uint256 balancePrivate;
+        uint256 balancePublic;
         bool isInWhitelist;
     }
 
     struct Request {
         string login;
         address wallet;
+        bool isConfirmed;
     }
 
     phase currentPhase = phase.Seed;
@@ -37,237 +39,227 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     Request[] whitelistRequests; // Запросы на попадание в белый список адресов, которые могут покупать Private токены
 
     uint256 public Time_start = block.timestamp; // Время старта системы
-    uint256 Time_now = Time_start; // Текущее время
-    uint256 public Time_system = Time_now; // Текущее время + время, которое увеличили пользователи
     uint256 Time_dif = 0; // Время, которое увеличили пользователи
+    uint256 token = 10 ** decimals(); // Один целый токен
+    uint256 ownerSeedAvailable = 0; // Количество Seed токенов, доступных владельцу для использования
+    uint256 ownerPrivateAvailable = 0; // Количество Private токенов, доступных владельцу для использования
     uint256 tokenCost; // Стоимость токена
     uint256 transactionLimit; // Ограничение на количество токенов за одну покупку
 
-    address owner;
-    address privateProvider;
-    address publicProvider;
+    address owner = 0xBE682A39f17D93753EAd1bAD15DB0A597ba35cE2;
+    address privateProvider = 0x771015557Ed9aa53a8095b392c95D86113BAeD0E;
+    address publicProvider = 0x27695988A13Ca5bD98EE0A22E2208753eA920486;
 
     mapping(address => User) addressToUser;
-    mapping(string => uint256) loginToPassword;
-    mapping(address => mapping(phase => uint256)) addressToTokens; // Количество токенов из разных групп у пользователей
+    mapping(string => address) loginToAddress;
+    mapping(string => bytes32) loginToPassword;
     mapping(address account => mapping(address spender => mapping(phase => uint256))) allowances;
-
-    modifier registered(address _wallet) {
-        require(_wallet != address(0), "Invalid address");
-        require(addressToUser[_wallet].wallet != address(0), "Invalid address");
-        _;
-    }
     
     modifier onlyPhase(phase _phase) {
         _updatePhase();
-        require(currentPhase == _phase, "Permission denied");
+        require(currentPhase == _phase, unicode"Доступ запрещён");
         _;
     }
 
     modifier onlyRole(roles _role) {
-        require(addressToUser[msg.sender].role == _role, "Permission denied");
+        require(addressToUser[msg.sender].role == _role, unicode"Доступ запрещён");
         _;
     }
 
-    error ERC20InsufficientBalance(address from, uint256 fromBalance, uint256 value);
-    error PermissionDenied();
-    error InvalidAddress(address wallet);
-    error InsufficientFunds(uint256 required, uint256 provided);
+    constructor () {
+        require(msg.sender == owner, unicode"Вы не владелец");
+        address investor1 = 0x47d12316fd3Cc738BAEC9B83f1983c7273fB8476;
+        address investor2 = 0x0308Ef127c1016496127Eeb6BBe7fA1b440E4c59;
+        address bestFriend = 0xAA432dAe9A51fE5E2871C13523f17cfb37AF9a09;
 
-    constructor (
-        address provider1, 
-        address provider2, 
-        address investor1, 
-        address investor2, 
-        address bestFriend
-    ) {
-        _mint(msg.sender, 10000000 * 10 ** decimals());
+        _mint(owner, 10_000_000*token);
         currentPhase = phase.Seed;
-        owner = msg.sender;
-        privateProvider = provider1;
-        publicProvider = provider2;
 
-        addressToUser[msg.sender] = User(msg.sender, "owner", roles.Owner, 10000000 * 10 ** decimals(), false, false);
-        addressToTokens[msg.sender][phase.Seed] = 1000000 * 10 ** decimals();
-        addressToTokens[msg.sender][phase.Private] = 3000000 * 10 ** decimals();
-        addressToTokens[msg.sender][phase.Public] = 6000000 * 10 ** decimals();
+        addressToUser[owner] = User(msg.sender, "owner", roles.Owner, 1_000_000*token, 3_000_000*token, 6_000_000*token, false);
+        addressToUser[privateProvider] = User(privateProvider, "privateProvider", roles.privateProvider, 0, 0, 0, false);
+        addressToUser[publicProvider] = User(publicProvider, "publicProvider", roles.publicProvider, 0, 0, 0, false);
+        addressToUser[investor1] = User(investor1, "investor1", roles.User, 0, 0, 0, false);
+        addressToUser[investor2] = User(investor2, "investor2", roles.User, 0, 0, 0, false);
+        addressToUser[bestFriend] = User(bestFriend, "bestFriend", roles.User, 0, 0, 0, false);
 
-        addressToUser[provider1] = User(provider1, "provider1", roles.privateProvider, 0, false, false);
-        addressToUser[provider2] = User(provider2, "provider2", roles.publicProvider, 0, false, false);
-        addressToUser[investor1] = User(investor1, "investor1", roles.User, 0, false, false);
-        addressToUser[investor2] = User(investor2, "investor2", roles.User, 0, false, false);
-        addressToUser[bestFriend] = User(bestFriend, "bestFriend", roles.User, 0, false, false);
-
-        transferToken(investor1, 300000, phase.Seed);
-        transferToken(investor2, 400000, phase.Seed);
-        transferToken(bestFriend, 200000, phase.Seed);
+        transferToken(investor1, 300_000*token, phase.Seed);
+        transferToken(investor2, 400_000*token, phase.Seed);
+        transferToken(bestFriend, 200_000*token, phase.Seed);
     }
 
-    function balanceOf(address account) public view override returns (uint256) {
-        return addressToUser[account].balance;
+    function getBalance(address wallet) public view returns(uint256 _balanceETH, uint256 _balanceSeed, uint256 _balancePrivate, uint256 _balancePublic) {
+        User memory _user = addressToUser[wallet];
+        return (msg.sender.balance, _user.balanceSeed, _user.balancePrivate, _user.balancePublic);
     }
 
-    function tokensOf(address account, phase tokenGroup) public view returns(uint256) {
-        return addressToTokens[account][tokenGroup];
+    function getWhitelistRequests() public view onlyRole(roles.privateProvider) returns (Request[] memory) {
+        return whitelistRequests;
     }
 
     function decimals() public pure override returns (uint8) {
         return 12;
     }
 
-    function IncSysLifeTime1Min() public registered(msg.sender) {
+    function IncSysLifeTime1Min() public {
         Time_dif += 60;
-        _updatePhase();
     }
 
-    function transferToken(address to, uint256 value, phase tokenGroup) public registered(msg.sender) registered(to) {
-        require(tokensOf(msg.sender, tokenGroup) >= value, "Insuffucient balance");
+    function transferToken(address to, uint256 value, phase tokenGroup) public {
+        if (tokenGroup == phase.Seed) {
+            require(addressToUser[msg.sender].balanceSeed >= value, unicode"Недостаточно токенов");
+            if (msg.sender == owner) {
+                require(ownerSeedAvailable >= value, unicode"Недостаточно токенов");
+                ownerSeedAvailable -= value;
+            }
+            addressToUser[msg.sender].balanceSeed -= value;
+            addressToUser[to].balanceSeed += value;
+            if (to == owner) {
+                ownerSeedAvailable += value;
+            }
+        } else if (tokenGroup == phase.Private) {
+            require(addressToUser[msg.sender].balancePrivate >= value, unicode"Недостаточно токенов");
+            if (msg.sender == owner) {
+                require(ownerPrivateAvailable >= value, unicode"Недостаточно токенов");
+                ownerPrivateAvailable -= value;
+            }
+            addressToUser[msg.sender].balancePrivate -= value;
+            addressToUser[to].balancePrivate += value;
+            if (to == owner) {
+                ownerPrivateAvailable += value;
+            }
+        } else {
+            require(addressToUser[msg.sender].balancePublic >= value, unicode"Недостаточно токенов");
+            addressToUser[msg.sender].balancePublic -= value;
+            addressToUser[to].balancePublic += value;
+        }
         transfer(to, value);
-        addressToTokens[msg.sender][tokenGroup] -= value;
-        addressToTokens[to][tokenGroup] += value;
-        addressToUser[msg.sender].balance -= value;
-        addressToUser[to].balance += value;
     }
 
-    function transferTokenFrom(address from, address to, uint256 value, phase tokenGroup) public registered(msg.sender) registered(from) registered(to) {
-        require(balanceOf(from) >= value, "Insufficient balance");
-        transferFrom(from, to, value);
-        addressToTokens[from][tokenGroup] -= value;
-        addressToTokens[to][tokenGroup] += value;
-        addressToUser[from].balance -= value;
-        addressToUser[to].balance += value;
+    function transferTokenFrom(address from, address to, uint256 value, phase tokenGroup) public {
+        require(allowances[from][msg.sender][tokenGroup] >= value, unicode"Недостаточно токенов");
+            allowances[from][msg.sender][tokenGroup] -= value;
+        if (tokenGroup == phase.Seed) {
+            addressToUser[to].balanceSeed += value;
+            if (to == owner) {
+                ownerSeedAvailable += value;
+            }
+        } else if (tokenGroup == phase.Private) {
+            addressToUser[to].balancePrivate += value;
+            if (to == owner) {
+                ownerPrivateAvailable += value;
+            }
+        } else {
+            addressToUser[to].balancePublic += value;
+        }
     }
 
-    function approveTokens(address spender, uint256 value, phase tokenGroup) public registered(msg.sender) {
-        _approveTokens(msg.sender, spender, value, tokenGroup);
-    }
-
-    function whitelistRequest() public registered(msg.sender) {
-        _updatePhase();
-        if (currentPhase != phase.Public) {
-            User memory user = addressToUser[msg.sender];
-            if (!user.whitelistRequested) {
-                whitelistRequests.push(Request(user.login, msg.sender));
+    function whitelistRequest() public onlyPhase(phase.Seed) {
+        User memory user = addressToUser[msg.sender];
+        bool notRequested = true;
+        for (uint256 i = 0; i < whitelistRequests.length; i++) {
+            if (whitelistRequests[i].wallet == msg.sender) {
+                notRequested = false;
+                break;
             }
         }
+        require(notRequested, unicode"Вы уже отправили заявку");
+        whitelistRequests.push(Request(user.login, msg.sender, false));
     }
 
     function processRequest(uint256 requestId, bool confirm) public onlyRole(roles.privateProvider) {
-        _updatePhase();
+        require(whitelistRequests[requestId].wallet != address(0), unicode"Заявка не существует");
+        require(!whitelistRequests[requestId].isConfirmed, unicode"Заявка уже обработана");
         if (confirm) {
+            whitelistRequests[requestId].isConfirmed = true;
             addressToUser[whitelistRequests[requestId].wallet].isInWhitelist = true;
+        } else {
+            delete whitelistRequests[requestId];
         }
-
-        delete whitelistRequests[requestId];
-        for (uint256 i = requestId; i < whitelistRequests.length - 1; i++) {
-            whitelistRequests[i] = whitelistRequests[i + 1];
-        }
-        whitelistRequests.pop();
     }
 
     function changeTokenCost(uint256 cost_Wei) public onlyRole(roles.publicProvider) onlyPhase(phase.Public) {
-        require(cost_Wei >= 10 ** decimals(), "Cost too small");
-        tokenCost = cost_Wei / (10 ** decimals());
+        require(cost_Wei >= 10 ** decimals(), unicode"Цена слишком маленькая");
+        tokenCost = cost_Wei;
     }
 
     function signUp(string calldata login, string calldata password) public {
-        require(addressToUser[msg.sender].wallet == address(0), "You are already registered");
-        require(loginToPassword[login] == 0, "This login is already registered");
-        addressToUser[msg.sender] = User(msg.sender, login, roles.User, 0, false, false);
-        loginToPassword[login] = uint256(keccak256(abi.encodePacked(password)));
+        require(addressToUser[msg.sender].wallet == address(0), unicode"Вы уже зарегистрированы");
+        require(loginToAddress[login] == address(0), unicode"Пользователь с таким логином уже зарегистрирован");
+        addressToUser[msg.sender] = User(msg.sender, login, roles.User, 0, 0, 0, false);
+        loginToPassword[login] = keccak256(abi.encodePacked(password));
     }
 
-    function signIn(string calldata login, string calldata password) public view returns(
-        User memory _user,
-        uint256 _seedTokens,
-        uint256 _privateTokens,
-        uint256 _publicTokens
-    ) {
-        User memory user = addressToUser[msg.sender];
-        string memory _login = user.login;
-
-        require(keccak256(abi.encodePacked(_login)) == keccak256(abi.encodePacked(login)), "This isn't your login");
-        require(loginToPassword[_login] == uint256(keccak256(abi.encodePacked(password))), "Password is incorrect");
-
-        address wallet = _user.wallet;
-        uint256 seedTokens = addressToTokens[wallet][phase.Seed];
-        uint256 privateTokens = addressToTokens[wallet][phase.Private];
-        uint256 publicTokens = addressToTokens[wallet][phase.Public];
-
-        return (_user, seedTokens, privateTokens, publicTokens);
+    function signIn(string calldata _login, string calldata _password) public view returns(User memory) {
+        require(loginToPassword[_login] == keccak256(abi.encodePacked(_password)), unicode"Пароль не верный");
+        return (addressToUser[loginToAddress[_login]]);
     }
 
-    function buyToken(uint256 amount) public payable registered(msg.sender) {
+    function getTime() public view returns(uint256){
+        return block.timestamp + Time_dif - Time_start;
+    }
+
+    function buyToken(uint256 amount) public payable {
         _updatePhase();
-        require(currentPhase != phase.Seed, "Sale not started");
         address provider;
+        require(msg.value >= amount / 10**12 * tokenCost, unicode"Недостаточно средств");
+        require(currentPhase != phase.Seed, unicode"Продажа не началась");
         if (currentPhase == phase.Public) {
             provider = publicProvider;
+            payable(owner).transfer(msg.value);
+            addressToUser[msg.sender].balancePublic += amount;
         } else {
-            require(addressToUser[msg.sender].isInWhitelist, "Free sale not started");
+            require(addressToUser[msg.sender].isInWhitelist, unicode"Свободная продажа не началась");
             provider = privateProvider;
+            payable(owner).transfer(msg.value);
+            addressToUser[msg.sender].balancePublic += amount;
         }
         uint256 allowedTokens = allowances[owner][provider][currentPhase];
-        require(allowedTokens >= amount, "Insufficient balance");
-        require(msg.value >= amount * tokenCost, "Insufficient funds");
-        payable(owner).transfer(msg.value);
+        require(allowedTokens >= amount, unicode"Недостаточно токенов");
         allowances[owner][provider][currentPhase] -= amount;
-        addressToTokens[msg.sender][currentPhase] += amount;
-        addressToUser[msg.sender].balance += amount;
+    }
+
+    function approveTokens(address spender, uint256 value, phase tokenGroup) public {
+        if (msg.sender == owner) {
+            if (tokenGroup == phase.Seed) {
+                require(ownerSeedAvailable >= value, unicode"Недостаточно токенов");
+            } else if (tokenGroup == phase.Private) {
+                require(ownerPrivateAvailable >= value, unicode"Недостаточно токенов");
+            }
+        }
+        _approveTokens(msg.sender, spender, value, tokenGroup);
     }
 
     function _updatePhase() private {
-        if (currentPhase != phase.Public) {
-            Time_now = block.timestamp;
-            Time_system = Time_now + Time_dif;
-            uint256 minutesFromStart = (Time_system - Time_start) / 60;
-            if (currentPhase == phase.Seed) {
-                if (minutesFromStart >= 5) {
-                    currentPhase = phase.Private;
-                    tokenCost = 0.00075 ether / (10 ** decimals());
-                    transactionLimit = 100000;
-                    _approveTokens(owner, privateProvider, 3000000, phase.Private);
-                }
-            } else if (currentPhase == phase.Private) {
-                if (minutesFromStart >= 15) {
-                    currentPhase = phase.Public;
-                    tokenCost = 0.001 ether / (10 ** decimals());
-                    transactionLimit = 5000;
-                    _approveTokens(owner, privateProvider, 0, phase.Private);
-                    _approveTokens(owner, publicProvider, 6000000, phase.Public);
-                }
+        uint256 minutesFromStart = getTime();
+        if (minutesFromStart > 5 minutes) {
+            if (minutesFromStart > 15 minutes) {
+                ownerPrivateAvailable = allowances[owner][publicProvider][phase.Private];
+                _approveTokens(owner, publicProvider, 6_000_000*token, phase.Public);
+                currentPhase = phase.Private;
+            } else {
+                ownerSeedAvailable = 100_000*token;
+                _approveTokens(owner, privateProvider, 3_000_000*token, phase.Private);
+                currentPhase = phase.Private;
             }
         }
     }
 
     function _approveTokens(address from, address to, uint256 value, phase tokenGroup) private {
-        require(addressToTokens[from][tokenGroup] >= value, "Insufficient balance");
-        _approve(from, to, value);
         uint256 allowedTokens = allowances[from][to][tokenGroup];
-        addressToTokens[from][tokenGroup] += allowedTokens;
-        _transfer(to, from, allowedTokens);
-
-        addressToTokens[from][tokenGroup] -= value;
         allowances[from][to][tokenGroup] = value;
-        _transfer(from, to, value);
-    }
 
-    // Test functions
-    function showTime() public returns(uint256 startTime, uint256 systemTime) {
-        _updatePhase();
-        return (Time_start, Time_system);
-    }
-
-    function showPhase() public returns(phase) {
-        _updatePhase();
-        return (currentPhase);
-    }
-
-    function showWhitelistRequests() onlyRole(roles.privateProvider) public view returns(Request[] memory) {
-        return whitelistRequests;
-    }
-
-    function showTokens(phase tokenGroup) public view registered(msg.sender) returns (uint256) {
-        return addressToTokens[msg.sender][tokenGroup];
+        if (tokenGroup == phase.Seed) {
+            require(addressToUser[from].balanceSeed >= value, unicode"Недостаточно токенов");
+            addressToUser[from].balanceSeed += allowedTokens;
+            addressToUser[from].balanceSeed -= value;
+        } else if (tokenGroup == phase.Private) {
+            require(addressToUser[from].balancePrivate >= value, unicode"Недостаточно токенов");
+            addressToUser[from].balancePrivate += allowedTokens;
+            addressToUser[from].balancePrivate -= value;
+        } else {
+            require(addressToUser[from].balancePublic >= value, unicode"Недостаточно токенов");
+            addressToUser[from].balancePublic += allowedTokens;
+            addressToUser[from].balancePublic -= value;
+        }
     }
 }

@@ -6,88 +6,9 @@
 	"output": {
 		"abi": [
 			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "provider1",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "provider2",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "investor1",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "investor2",
-						"type": "address"
-					},
-					{
-						"internalType": "address",
-						"name": "bestFriend",
-						"type": "address"
-					}
-				],
+				"inputs": [],
 				"stateMutability": "nonpayable",
 				"type": "constructor"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "from",
-						"type": "address"
-					},
-					{
-						"internalType": "uint256",
-						"name": "fromBalance",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "value",
-						"type": "uint256"
-					}
-				],
-				"name": "ERC20InsufficientBalance",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "uint256",
-						"name": "required",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "provided",
-						"type": "uint256"
-					}
-				],
-				"name": "InsufficientFunds",
-				"type": "error"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "wallet",
-						"type": "address"
-					}
-				],
-				"name": "InvalidAddress",
-				"type": "error"
-			},
-			{
-				"inputs": [],
-				"name": "PermissionDenied",
-				"type": "error"
 			},
 			{
 				"anonymous": false,
@@ -149,19 +70,6 @@
 			{
 				"inputs": [],
 				"name": "Time_start",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "Time_system",
 				"outputs": [
 					{
 						"internalType": "uint256",
@@ -329,6 +237,83 @@
 				"inputs": [
 					{
 						"internalType": "address",
+						"name": "wallet",
+						"type": "address"
+					}
+				],
+				"name": "getBalance",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "_balanceETH",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_balanceSeed",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_balancePrivate",
+						"type": "uint256"
+					},
+					{
+						"internalType": "uint256",
+						"name": "_balancePublic",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getTime",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "getWhitelistRequests",
+				"outputs": [
+					{
+						"components": [
+							{
+								"internalType": "string",
+								"name": "login",
+								"type": "string"
+							},
+							{
+								"internalType": "address",
+								"name": "wallet",
+								"type": "address"
+							},
+							{
+								"internalType": "bool",
+								"name": "isConfirmed",
+								"type": "bool"
+							}
+						],
+						"internalType": "struct cryptoMonster.Request[]",
+						"name": "",
+						"type": "tuple[]"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
 						"name": "spender",
 						"type": "address"
 					},
@@ -381,90 +366,15 @@
 				"type": "function"
 			},
 			{
-				"inputs": [],
-				"name": "showPhase",
-				"outputs": [
-					{
-						"internalType": "enum cryptoMonster.phase",
-						"name": "",
-						"type": "uint8"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "showTime",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "startTime",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "systemTime",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "nonpayable",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "enum cryptoMonster.phase",
-						"name": "tokenGroup",
-						"type": "uint8"
-					}
-				],
-				"name": "showTokens",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [],
-				"name": "showWhitelistRequests",
-				"outputs": [
-					{
-						"components": [
-							{
-								"internalType": "string",
-								"name": "login",
-								"type": "string"
-							},
-							{
-								"internalType": "address",
-								"name": "wallet",
-								"type": "address"
-							}
-						],
-						"internalType": "struct cryptoMonster.Request[]",
-						"name": "",
-						"type": "tuple[]"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
 				"inputs": [
 					{
 						"internalType": "string",
-						"name": "login",
+						"name": "_login",
 						"type": "string"
 					},
 					{
 						"internalType": "string",
-						"name": "password",
+						"name": "_password",
 						"type": "string"
 					}
 				],
@@ -489,13 +399,18 @@
 							},
 							{
 								"internalType": "uint256",
-								"name": "balance",
+								"name": "balanceSeed",
 								"type": "uint256"
 							},
 							{
-								"internalType": "bool",
-								"name": "whitelistRequested",
-								"type": "bool"
+								"internalType": "uint256",
+								"name": "balancePrivate",
+								"type": "uint256"
+							},
+							{
+								"internalType": "uint256",
+								"name": "balancePublic",
+								"type": "uint256"
 							},
 							{
 								"internalType": "bool",
@@ -504,23 +419,8 @@
 							}
 						],
 						"internalType": "struct cryptoMonster.User",
-						"name": "_user",
+						"name": "",
 						"type": "tuple"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_seedTokens",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_privateTokens",
-						"type": "uint256"
-					},
-					{
-						"internalType": "uint256",
-						"name": "_publicTokens",
-						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -552,30 +452,6 @@
 						"internalType": "string",
 						"name": "",
 						"type": "string"
-					}
-				],
-				"stateMutability": "view",
-				"type": "function"
-			},
-			{
-				"inputs": [
-					{
-						"internalType": "address",
-						"name": "account",
-						"type": "address"
-					},
-					{
-						"internalType": "enum cryptoMonster.phase",
-						"name": "tokenGroup",
-						"type": "uint8"
-					}
-				],
-				"name": "tokensOf",
-				"outputs": [
-					{
-						"internalType": "uint256",
-						"name": "",
-						"type": "uint256"
 					}
 				],
 				"stateMutability": "view",
@@ -808,11 +684,11 @@
 			]
 		},
 		"cryptoMonster.sol": {
-			"keccak256": "0x3d2ad6c3a8fb759686ed2400458f9d96fad61695c361ddeb2ebf3517b676664b",
+			"keccak256": "0x6c88848f8981854eac1daace9b26a4593bdf290e60ff513384980d64c8598dec",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://490212de8b2ce4b1e7bca3a28ea4e6e67d6b6c95baf1209978b94144ca5b6c2c",
-				"dweb:/ipfs/Qmd2yjPUzAQCxrRoLAnVAT4q9pp3vpxbyHArAnokwL4PEV"
+				"bzz-raw://5c7da87c70348c7737c275dbf2fdedbcb9b9c16cd2781d35f950a98f111259f5",
+				"dweb:/ipfs/QmVkWoUcG7JeJC5ZRvdmZHm4roRPN39TcEghNnsZrzv78M"
 			]
 		}
 	},
