@@ -41,7 +41,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     uint256 public Time_start = block.timestamp; // Время старта системы
     uint256 Time_dif = 0; // Время, которое увеличили пользователи
     uint256 token = 10 ** decimals(); // Один целый токен
-    uint256 ownerSeedAvailable = 0; // Количество Seed токенов, доступных владельцу для использования
+    uint256 ownerSeedAvailable = 900_000*token; // Количество Seed токенов, доступных владельцу для использования
     uint256 ownerPrivateAvailable = 0; // Количество Private токенов, доступных владельцу для использования
     uint256 tokenCost; // Стоимость токена
     uint256 transactionLimit; // Ограничение на количество токенов за одну покупку
@@ -108,7 +108,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         if (tokenGroup == phase.Seed) {
             require(addressToUser[msg.sender].balanceSeed >= value, unicode"Недостаточно токенов");
             if (msg.sender == owner) {
-                require(ownerSeedAvailable >= value, unicode"Недостаточно токенов");
+                require(ownerSeedAvailable >= value, unicode"Недостаточно токено");
                 ownerSeedAvailable -= value;
             }
             addressToUser[msg.sender].balanceSeed -= value;
@@ -233,10 +233,15 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         uint256 minutesFromStart = getTime();
         if (minutesFromStart > 5 minutes) {
             if (minutesFromStart > 15 minutes) {
-                ownerPrivateAvailable = allowances[owner][publicProvider][phase.Private];
+                tokenCost = 0.00075 ether / token;
+                transactionLimit = 100_000;
+                ownerPrivateAvailable = allowances[owner][privateProvider][phase.Private];
+                _approveTokens(owner, privateProvider, 0, phase.Private);
                 _approveTokens(owner, publicProvider, 6_000_000*token, phase.Public);
-                currentPhase = phase.Private;
+                currentPhase = phase.Public;
             } else {
+                tokenCost = 0.001 ether / token;
+                transactionLimit = 5_000;
                 ownerSeedAvailable = 100_000*token;
                 _approveTokens(owner, privateProvider, 3_000_000*token, phase.Private);
                 currentPhase = phase.Private;
