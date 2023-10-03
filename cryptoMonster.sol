@@ -179,7 +179,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
 
     function changeTokenCost(uint256 cost_Wei) public onlyRole(roles.publicProvider) onlyPhase(phase.Public) {
         require(cost_Wei >= 10 ** decimals(), unicode"Цена слишком маленькая");
-        tokenCost = cost_Wei;
+        tokenCost = cost_Wei / token;
     }
 
     function signUp(string calldata login, string calldata password) public {
@@ -203,6 +203,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         address provider;
         require(msg.value >= amount / 10**12 * tokenCost, unicode"Недостаточно средств");
         require(currentPhase != phase.Seed, unicode"Продажа не началась");
+        require(amount <= transactionLimit, unicode"Вы вышли за лимит покупки токенов за транзакцию");
         if (currentPhase == phase.Public) {
             provider = publicProvider;
             payable(owner).transfer(msg.value);
@@ -233,15 +234,15 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         uint256 minutesFromStart = getTime();
         if (minutesFromStart > 5 minutes) {
             if (minutesFromStart > 15 minutes) {
-                tokenCost = 0.00075 ether / token;
-                transactionLimit = 100_000;
+                tokenCost = 0.001 ether / token;
+                transactionLimit = 5_000*token;
                 ownerPrivateAvailable = allowances[owner][privateProvider][phase.Private];
                 _approveTokens(owner, privateProvider, 0, phase.Private);
                 _approveTokens(owner, publicProvider, 6_000_000*token, phase.Public);
                 currentPhase = phase.Public;
             } else {
-                tokenCost = 0.001 ether / token;
-                transactionLimit = 5_000;
+                tokenCost = 0.00075 ether / token;
+                transactionLimit = 100_000*token;
                 ownerSeedAvailable = 100_000*token;
                 _approveTokens(owner, privateProvider, 3_000_000*token, phase.Private);
                 currentPhase = phase.Private;
