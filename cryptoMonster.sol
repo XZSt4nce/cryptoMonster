@@ -178,7 +178,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     }
 
     function changeTokenCost(uint256 cost_Wei) public onlyRole(roles.publicProvider) onlyPhase(phase.Public) {
-        require(cost_Wei >= 10 ** decimals(), unicode"Цена слишком маленькая");
+        require(cost_Wei >= token, unicode"Цена слишком маленькая");
         tokenCost = cost_Wei / token;
     }
 
@@ -232,8 +232,8 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
 
     function _updatePhase() private {
         uint256 minutesFromStart = getTime();
-        if (minutesFromStart > 5 minutes) {
-            if (minutesFromStart > 15 minutes) {
+        if (minutesFromStart > 5 minutes && currentPhase != phase.Public) {
+            if (minutesFromStart > 15 minutes && currentPhase == phase.Private) {
                 tokenCost = 0.001 ether / token;
                 transactionLimit = 5_000*token;
                 ownerPrivateAvailable = allowances[owner][privateProvider][phase.Private];
