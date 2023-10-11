@@ -684,11 +684,11 @@
 			]
 		},
 		"cryptoMonster.sol": {
-			"keccak256": "0xe3a319c5abcf101e8782376cf46b4237752743ee2e3a029f63444d8dac6a0e93",
+			"keccak256": "0x8e98453e1a3fc6142a157bfab072b82bdf6d6ac2242c1ae7ad20769b70ed14a2",
 			"license": "UNLICENSED",
 			"urls": [
-				"bzz-raw://6d05ac0b8ebe80a2213ccafcda02299bbf3a92ae47e0c9ec8e79aeb4758e2bd4",
-				"dweb:/ipfs/QmPDysLr9Y9HDg63kHPi2eQbYgeCGGzgF3pVCbM4YB8kg2"
+				"bzz-raw://f0467ddbe40dfb1da77cf93343579d62689217d2d4d2d22886500a639a1f48e1",
+				"dweb:/ipfs/QmNbxaeGVXpMh16dJut14HK2mDteev1NmE3mVujMX4xcah"
 			]
 		}
 	},

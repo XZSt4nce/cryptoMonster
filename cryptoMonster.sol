@@ -41,8 +41,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     uint256 public Time_start = block.timestamp; // Время старта системы
     uint256 Time_dif = 0; // Время, которое увеличили пользователи
     uint256 token = 10 ** decimals(); // Один целый токен
-    uint256 ownerSeedAvailable = 900_000*token; // Количество Seed токенов, доступных владельцу для использования
-    uint256 ownerPrivateAvailable = 0; // Количество Private токенов, доступных владельцу для использования
+    uint256 ownerAvailable = 900_000*token; // Количество токенов, доступных владельцу для использования
     uint256 tokenCost; // Стоимость токена
     uint256 transactionLimit; // Ограничение на количество токенов за одну покупку
 
@@ -105,51 +104,45 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     }
 
     function transferToken(address to, uint256 value, phase tokenGroup) public {
+        if (msg.sender == owner) {
+            require(ownerAvailable >= value, unicode"Недостаточно токено");
+            ownerAvailable -= value;
+        }
+
         if (tokenGroup == phase.Seed) {
             require(addressToUser[msg.sender].balanceSeed >= value, unicode"Недостаточно токенов");
-            if (msg.sender == owner) {
-                require(ownerSeedAvailable >= value, unicode"Недостаточно токено");
-                ownerSeedAvailable -= value;
-            }
             addressToUser[msg.sender].balanceSeed -= value;
             addressToUser[to].balanceSeed += value;
-            if (to == owner) {
-                ownerSeedAvailable += value;
-            }
+            
         } else if (tokenGroup == phase.Private) {
             require(addressToUser[msg.sender].balancePrivate >= value, unicode"Недостаточно токенов");
-            if (msg.sender == owner) {
-                require(ownerPrivateAvailable >= value, unicode"Недостаточно токенов");
-                ownerPrivateAvailable -= value;
-            }
             addressToUser[msg.sender].balancePrivate -= value;
             addressToUser[to].balancePrivate += value;
-            if (to == owner) {
-                ownerPrivateAvailable += value;
-            }
         } else {
             require(addressToUser[msg.sender].balancePublic >= value, unicode"Недостаточно токенов");
             addressToUser[msg.sender].balancePublic -= value;
             addressToUser[to].balancePublic += value;
+        }
+
+        if (to == owner) {
+            ownerAvailable += value;
         }
         transfer(to, value);
     }
 
     function transferTokenFrom(address from, address to, uint256 value, phase tokenGroup) public {
         require(allowances[from][msg.sender][tokenGroup] >= value, unicode"Недостаточно токенов");
-            allowances[from][msg.sender][tokenGroup] -= value;
+        allowances[from][msg.sender][tokenGroup] -= value;
         if (tokenGroup == phase.Seed) {
             addressToUser[to].balanceSeed += value;
-            if (to == owner) {
-                ownerSeedAvailable += value;
-            }
         } else if (tokenGroup == phase.Private) {
             addressToUser[to].balancePrivate += value;
-            if (to == owner) {
-                ownerPrivateAvailable += value;
-            }
         } else {
             addressToUser[to].balancePublic += value;
+        }
+
+        if (to == owner) {
+            ownerAvailable += value;
         }
     }
 
@@ -221,31 +214,29 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
 
     function approveTokens(address spender, uint256 value, phase tokenGroup) public {
         if (msg.sender == owner) {
-            if (tokenGroup == phase.Seed) {
-                require(ownerSeedAvailable >= value, unicode"Недостаточно токенов");
-            } else if (tokenGroup == phase.Private) {
-                require(ownerPrivateAvailable >= value, unicode"Недостаточно токенов");
-            }
+            require(ownerAvailable >= value, unicode"Недостаточно токенов");
         }
         _approveTokens(msg.sender, spender, value, tokenGroup);
     }
 
     function _updatePhase() private {
-        uint256 minutesFromStart = getTime();
-        if (minutesFromStart > 5 minutes && currentPhase != phase.Public) {
-            if (minutesFromStart > 15 minutes && currentPhase == phase.Private) {
-                tokenCost = 0.001 ether / token;
-                transactionLimit = 5_000*token;
-                ownerPrivateAvailable = allowances[owner][privateProvider][phase.Private];
-                _approveTokens(owner, privateProvider, 0, phase.Private);
-                _approveTokens(owner, publicProvider, 6_000_000*token, phase.Public);
-                currentPhase = phase.Public;
-            } else {
-                tokenCost = 0.00075 ether / token;
-                transactionLimit = 100_000*token;
-                ownerSeedAvailable = 100_000*token;
-                _approveTokens(owner, privateProvider, 3_000_000*token, phase.Private);
-                currentPhase = phase.Private;
+        if (currentPhase != phase.Public) {
+            uint256 secondsFromStart = getTime();
+            if (secondsFromStart > 5 minutes) {
+                if (secondsFromStart > 15 minutes) {
+                    tokenCost = 0.001 ether / token;
+                    transactionLimit = 5_000*token;
+                    ownerAvailable += allowances[owner][privateProvider][phase.Private];
+                    _approveTokens(owner, privateProvider, 0, phase.Private);
+                    _approveTokens(owner, publicProvider, 6_000_000*token, phase.Public);
+                    currentPhase = phase.Public;
+                } else if (currentPhase == phase.Seed) {
+                    tokenCost = 0.00075 ether / token;
+                    transactionLimit = 100_000*token;
+                    ownerAvailable += 100_000*token;
+                    _approveTokens(owner, privateProvider, 3_000_000*token, phase.Private);
+                    currentPhase = phase.Private;
+                }
             }
         }
     }
