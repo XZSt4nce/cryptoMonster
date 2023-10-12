@@ -205,7 +205,7 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
             require(addressToUser[msg.sender].isInWhitelist, unicode"Свободная продажа не началась");
             provider = privateProvider;
             payable(owner).transfer(msg.value);
-            addressToUser[msg.sender].balancePublic += amount;
+            addressToUser[msg.sender].balancePrivate += amount;
         }
         uint256 allowedTokens = allowances[owner][provider][currentPhase];
         require(allowedTokens >= amount, unicode"Недостаточно токенов");
@@ -215,6 +215,10 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
     function approveTokens(address spender, uint256 value, phase tokenGroup) public {
         if (msg.sender == owner) {
             require(ownerAvailable >= value, unicode"Недостаточно токенов");
+            require(spender != publicProvider, unicode"Владелец не может вызывать этот метод по отношению к Public provider");
+            if (spender == privateProvider) {
+                require(currentPhase != phase.Private, unicode"Владелец не может вызывать этот метод по отношению к Private provider во время Private фазы");
+            }
         }
         _approveTokens(msg.sender, spender, value, tokenGroup);
     }
