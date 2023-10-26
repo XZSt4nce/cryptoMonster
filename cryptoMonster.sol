@@ -86,9 +86,25 @@ contract cryptoMonster is ERC20("CryptoMonster", "CMON") {
         transferToken(bestFriend, 200_000*token, phase.Seed);
     }
 
-    function getBalance(address wallet) public view returns(uint256 _balanceETH, uint256 _balanceSeed, uint256 _balancePrivate, uint256 _balancePublic) {
-        User memory _user = addressToUser[wallet];
+    function getOwnBalance() public view returns(uint256 _balanceETH, uint256 _balanceSeed, uint256 _balancePrivate, uint256 _balancePublic) {
+        User memory _user = addressToUser[msg.sender];
         return (msg.sender.balance, _user.balanceSeed, _user.balancePrivate, _user.balancePublic);
+    }
+
+    function getBalance(address wallet) public view returns(uint256 _balanceETH, uint256 _balanceTokens) {
+        User memory _sender = addressToUser[msg.sender];
+        User memory _user = addressToUser[wallet];
+        if (_sender.role == roles.privateProvider) {
+            return (wallet.balance, _user.balancePrivate);
+        } else if (_sender.role == roles.publicProvider) {
+            return (wallet.balance, _user.balancePublic);
+        } else if (currentPhase == phase.Seed) {
+            return (wallet.balance, _user.balanceSeed);
+        } else if (currentPhase == phase.Private) {
+            return (wallet.balance, _user.balancePrivate);
+        } else {
+            return (wallet.balance, _user.balancePublic);
+        }
     }
 
     function getWhitelistRequests() public view onlyRole(roles.privateProvider) returns (Request[] memory) {
